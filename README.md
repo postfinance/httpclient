@@ -1,5 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/postfinance/httpclient)](https://goreportcard.com/report/github.com/postfinance/httpclient)
 [![GoDoc](https://godoc.org/github.com/postfinance/httpclient?status.svg)](https://godoc.org/github.com/postfinance/httpclient)
+[![Build Status](https://travis-ci.org/postfinance/httpclient.svg?branch=master)](https://travis-ci.org/postfinance/httpclient)
 
 # httpclient
 

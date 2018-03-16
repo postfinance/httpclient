@@ -1,0 +1,16 @@
+sudo: false
+language: go
+go:
+- "1.10"
+
+script:
+- go tool vet . ./cmd
+- go test -v --race .
+- go build cmd/httpclient-gen-go/main.go
+
+branches:
+  only:
+  - master
+
+matrix:
+  fast_finish: true
