@@ -52,6 +52,9 @@ type Client struct {
 	username string
 	password string
 
+	// custom http header
+	header http.Header
+
 	Marshaler   MarshalerFunc
 	Unmarshaler UnmarshalerFunc
 
@@ -187,6 +190,14 @@ func WithContentType(ct string) Opt {
 	}
 }
 
+// WithHeader is a client option for setting custom http header(s) for each request
+func WithHeader(header http.Header) Opt {
+	return func(c *Client) error {
+		c.header = header
+		return nil
+	}
+}
+
 // NewRequest creates an API request. A relative URL can be provided in urlStr, which will be resolved to the
 // BaseURL of the Client. Relative URLs should always be specified without a preceding slash. If specified, the
 // value pointed to by body will be encoded and included in as the request body.
@@ -217,6 +228,9 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 		req.SetBasicAuth(c.username, c.password)
 	}
 
+	if c.header != nil {
+		req.Header = c.header
+	}
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Accept", contentType)
 

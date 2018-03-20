@@ -108,6 +108,19 @@ func TestClient(t *testing.T) {
 		assert.Equal(t, password, c.password)
 	})
 
+	t.Run("new client with headers", func(t *testing.T) {
+		customHeader := http.Header{
+			"X-Requested-By": []string{"test"},
+		}
+		c, err := New(baseurl, WithHeader(customHeader))
+		assert.Nil(t, err)
+		assert.NotNil(t, c)
+
+		req, err := c.NewRequest(http.MethodGet, "/test", nil)
+		assert.Nil(t, err)
+		assert.Equal(t, req.Header, customHeader)
+	})
+
 	t.Run("new client valid baseurl valid HTTP client", func(t *testing.T) {
 		httpC := &http.Client{}
 		c, err := New(baseurl, WithHTTPClient(httpC))
