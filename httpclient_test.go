@@ -118,7 +118,9 @@ func TestClient(t *testing.T) {
 
 		req, err := c.NewRequest(http.MethodGet, "/test", nil)
 		assert.Nil(t, err)
-		assert.Equal(t, req.Header, customHeader)
+		assert.Equal(t, req.Header["X-Requested-By"], []string{"test"})
+		assert.Contains(t, req.Header, "Content-Type")
+		assert.Contains(t, req.Header, "Accept")
 	})
 
 	t.Run("new client valid baseurl valid HTTP client", func(t *testing.T) {

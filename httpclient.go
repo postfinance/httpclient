@@ -191,6 +191,7 @@ func WithContentType(ct string) Opt {
 }
 
 // WithHeader is a client option for setting custom http header(s) for each request
+// Content-Type and Accept headers will always be overwritten by the clients ContentType setting
 func WithHeader(header http.Header) Opt {
 	return func(c *Client) error {
 		c.header = header
