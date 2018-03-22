@@ -312,7 +312,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	}
 
 	if err = c.Unmarshaler(resp.Body, v, c.ContentType); err != nil {
-		return nil, err
+		return resp, err
 	}
 
 	return resp, err
