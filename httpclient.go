@@ -298,7 +298,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 	}()
 
 	if c.ResponseCallback == nil {
-		panic("CheckResponse is  nil")
+		panic("ResponseCallback is nil")
 	}
 
 	resp, err = c.ResponseCallback(resp)
