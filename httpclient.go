@@ -52,7 +52,7 @@ type Client struct {
 	username string
 	password string
 
-	// custom http header
+	// custom http header(s)
 	header http.Header
 
 	Marshaler   MarshalerFunc
@@ -191,7 +191,8 @@ func WithContentType(ct string) Opt {
 }
 
 // WithHeader is a client option for setting custom http header(s) for each request
-// Content-Type and Accept headers will always be overwritten by the clients ContentType setting
+// Content-Type and Accept headers will be appended by the clients ContentType setting
+// Authorization header is overwritten if WithUsername/WithPassowrd was used to setup the client
 func WithHeader(header http.Header) Opt {
 	return func(c *Client) error {
 		c.header = header
@@ -225,12 +226,12 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 		return nil, err
 	}
 
-	if len(c.username) > 0 && len(c.password) > 0 {
-		req.SetBasicAuth(c.username, c.password)
-	}
-
 	if c.header != nil {
 		req.Header = c.header
+	}
+
+	if len(c.username) > 0 && len(c.password) > 0 {
+		req.SetBasicAuth(c.username, c.password)
 	}
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Accept", contentType)
