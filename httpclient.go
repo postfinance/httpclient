@@ -289,7 +289,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 
 	resp, err := c.client.Do(req.WithContext(ctx))
 	if err != nil {
-		return nil, err
+		return resp, err
 	}
 
 	defer func() {
