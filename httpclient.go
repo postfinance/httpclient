@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"time"
 
 	"golang.org/x/time/rate"
 
@@ -124,7 +125,9 @@ func New(baseURL string, opts ...Opt) (*Client, error) {
 	}
 
 	c := &Client{
-		client:           http.DefaultClient,
+		client: &http.Client{
+			Timeout: 30 * time.Second,
+		},
 		BaseURL:          u,
 		ContentType:      ContentTypeJSON,
 		Marshaler:        marshal,
