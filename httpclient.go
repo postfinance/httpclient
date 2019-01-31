@@ -49,9 +49,12 @@ type Client struct {
 	// ContentType is used as Content-Type and Accept in request headers.
 	ContentType string
 
-	// username/password for basic authentication
+	// username/password for basic authentication.
 	username string
 	password string
+
+	// if true, http.Response.Body will not be closed.
+	keepResponseBody bool
 
 	// custom http header(s)
 	header http.Header
@@ -203,6 +206,16 @@ func WithHeader(header http.Header) Opt {
 	}
 }
 
+// WithKeepResponseBody you are responsible for closing the http.Response.Body to prevent any
+// resource leakages. Check http://engineering.rainchasers.com/golang/2015/03/03/memory-leak-missing-body-close.html
+// for more details.
+func WithKeepResponseBody() Opt {
+	return func(c *Client) error {
+		c.keepResponseBody = true
+		return nil
+	}
+}
+
 // NewRequest creates an API request. A relative URL can be provided in urlStr, which will be resolved to the
 // BaseURL of the Client. Relative URLs should always be specified without a preceding slash. If specified, the
 // value pointed to by body will be encoded and included in as the request body.
@@ -295,11 +308,21 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 		return resp, err
 	}
 
-	defer func() {
+	deferFunc := func() {
 		if rerr := resp.Body.Close(); rerr == nil {
 			err = rerr
 		}
-	}()
+	}
+
+	var save io.ReadCloser
+	if c.keepResponseBody {
+		save, resp.Body, _ = drainBody(resp.Body)
+		deferFunc = func() {
+			resp.Body = save
+		}
+	}
+
+	defer deferFunc()
 
 	if c.ResponseCallback == nil {
 		panic("ResponseCallback is nil")
@@ -379,4 +402,25 @@ func responseCallback(r *http.Response) (*http.Response, error) {
 		return r, nil
 	}
 	return r, errors.New(r.Status)
+}
+
+// drainBody reads all of b to memory and then returns two equivalent
+// ReadClosers yielding the same bytes.
+//
+// It returns an error if the initial slurp of all bytes fails. It does not attempt
+// to make the returned ReadClosers have identical error-matching behavior.
+// https://golang.org/src/net/http/httputil/dump.go#L26
+func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
+	if b == http.NoBody {
+		// No copying needed. Preserve the magic sentinel meaning of NoBody.
+		return http.NoBody, http.NoBody, nil
+	}
+	var buf bytes.Buffer
+	if _, err = buf.ReadFrom(b); err != nil {
+		return nil, b, err
+	}
+	if err = b.Close(); err != nil {
+		return nil, b, err
+	}
+	return ioutil.NopCloser(&buf), ioutil.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }

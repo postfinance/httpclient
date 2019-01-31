@@ -16,6 +16,7 @@ import (
 
 	"github.com/moul/http2curl"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 type options struct {
@@ -455,5 +456,29 @@ func TestClient(t *testing.T) {
 		act := 42
 		_, err = c.Do(ctx, req, &act)
 		assert.NotNil(t, err)
+	})
+
+	t.Run("do a request WithKeepResponseBody and verify body is not closed", func(t *testing.T) {
+		c, _ := New(ts.URL, WithKeepResponseBody())
+		ctx := context.Background()
+		req, err := c.NewRequest(http.MethodGet, "node", testMessage)
+		require.NoError(t, err)
+		assert.NotNil(t, req)
+		r, err := c.Do(ctx, req, nil)
+		require.NoError(t, err)
+		_, err = ioutil.ReadAll(r.Body)
+		assert.NoError(t, err)
+	})
+
+	t.Run("do a request without WithKeepResponseBody and verify body is closed", func(t *testing.T) {
+		c, _ := New(ts.URL)
+		ctx := context.Background()
+		req, err := c.NewRequest(http.MethodGet, "node", testMessage)
+		require.NoError(t, err)
+		assert.NotNil(t, req)
+		r, err := c.Do(ctx, req, nil)
+		require.NoError(t, err)
+		_, err = ioutil.ReadAll(r.Body)
+		assert.Error(t, err)
 	})
 }
