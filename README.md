@@ -1,6 +1,6 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/postfinance/httpclient)](https://goreportcard.com/report/github.com/postfinance/httpclient)
 [![GoDoc](https://godoc.org/github.com/postfinance/httpclient?status.svg)](https://godoc.org/github.com/postfinance/httpclient)
-[![Build Status](https://travis-ci.org/postfinance/httpclient.svg?branch=master)](https://travis-ci.org/postfinance/httpclient)
+[![Build Status](https://github.com/postfinance/httpclient/workflows/build/badge.svg)](https://github.com/postfinance/httpclient/actions)
 [![Coverage Status](https://coveralls.io/repos/github/postfinance/httpclient/badge.svg?branch=master)](https://coveralls.io/github/postfinance/httpclient?branch=master)
 
 # httpclient
