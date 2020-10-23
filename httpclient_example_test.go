@@ -57,8 +57,8 @@ func ExampleRequestCallbackFunc() {
 	c.RequestCallback = func(r *http.Request) *http.Request {
 		// to convert the request in an appropriate curl command
 		// command, _ := http2curl.GetCurlCommand(r)
-
 		fmt.Fprintf(os.Stdout, "Accept: %s\nContent-Type: %s\nMethod: %s", r.Header.Get("Accept"), r.Header.Get("Content-Type"), r.Method)
+
 		return r
 	}
 	req, _ := c.NewRequest(http.MethodGet, "/example", nil)
