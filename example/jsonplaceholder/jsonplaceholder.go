@@ -1,3 +1,4 @@
+// Package jsonplaceholder implements an example httpclient
 package jsonplaceholder
 
 import (
@@ -37,11 +38,14 @@ func (p *PostImpl) Get(ctx context.Context, id int) (*Post, *http.Response, erro
 	if err != nil {
 		return nil, nil, err
 	}
+
 	post := Post{}
+
 	resp, err := p.client.Do(ctx, req, &post)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return &post, resp, nil
 }
 
@@ -51,11 +55,14 @@ func (p *PostImpl) List(ctx context.Context) ([]Post, *http.Response, error) {
 	if err != nil {
 		return nil, nil, err
 	}
+
 	posts := []Post{}
+
 	resp, err := p.client.Do(ctx, req, &posts)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return posts, resp, nil
 }
 
@@ -65,11 +72,14 @@ func (p *PostImpl) Create(ctx context.Context, newPost *Post) (*Post, *http.Resp
 	if err != nil {
 		return nil, nil, err
 	}
+
 	post := Post{}
+
 	resp, err := p.client.Do(ctx, req, &post)
 	if err != nil {
 		return nil, nil, err
 	}
+
 	return &post, resp, nil
 }
 
@@ -79,9 +89,11 @@ func (p *PostImpl) Delete(ctx context.Context, id int) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	resp, err := p.client.Do(ctx, req, nil)
 	if err != nil {
 		return nil, err
 	}
+
 	return resp, nil
 }

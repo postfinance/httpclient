@@ -114,6 +114,7 @@ func QueryOptions(u string, opt interface{}) (string, error) {
 	}
 
 	origURL.RawQuery = origValues.Encode()
+
 	return origURL.String(), nil
 }
 
@@ -141,16 +142,19 @@ func New(baseURL string, opts ...Opt) (*Client, error) {
 			return nil, err
 		}
 	}
+
 	return c, nil
 }
 
 // WithPassword is a client option for setting the password for basic authentication.
 func WithPassword(p string) Opt {
 	return func(c *Client) error {
-		if len(p) == 0 {
+		if p == "" {
 			return errors.New("password cannot be empty")
 		}
+
 		c.password = p
+
 		return nil
 	}
 }
@@ -158,10 +162,12 @@ func WithPassword(p string) Opt {
 // WithUsername is a client option for setting the username.
 func WithUsername(u string) Opt {
 	return func(c *Client) error {
-		if len(u) == 0 {
+		if u == "" {
 			return errors.New("username cannot be empty")
 		}
+
 		c.username = u
+
 		return nil
 	}
 }
@@ -185,10 +191,12 @@ func WithRateLimiter(l *rate.Limiter) Opt {
 // WithContentType is a client option for setting the content type
 func WithContentType(ct string) Opt {
 	return func(c *Client) error {
-		if len(ct) == 0 {
+		if ct == "" {
 			return errors.New("content type cannot be empty")
 		}
+
 		c.ContentType = ct
+
 		return nil
 	}
 }
@@ -219,6 +227,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	}
 
 	buf := new(bytes.Buffer)
+
 	contentType, err := c.Marshaler(buf, body, c.ContentType)
 	if err != nil {
 		return nil, err
@@ -236,12 +245,14 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	if len(c.username) > 0 && len(c.password) > 0 {
 		req.SetBasicAuth(c.username, c.password)
 	}
+
 	req.Header.Add("Content-Type", contentType)
 	req.Header.Add("Accept", contentType)
 
 	if c.RequestCallback == nil {
 		panic("RequestCallback is nil")
 	}
+
 	return c.RequestCallback(req), nil
 }
 
@@ -250,6 +261,7 @@ func marshal(w io.Writer, v interface{}, mediaType string) (string, error) {
 	if v == nil {
 		return mediaType, nil
 	}
+
 	switch mediaType {
 	case ContentTypeJSON:
 		return ContentTypeJSON, MarshalJSON(w, v, mediaType)
@@ -274,7 +286,9 @@ func MarshalYAML(w io.Writer, v interface{}, mediaType string) error {
 	if err != nil {
 		return err
 	}
+
 	_, err = w.Write(b)
+
 	return err
 }
 
@@ -282,7 +296,6 @@ func MarshalYAML(w io.Writer, v interface{}, mediaType string) error {
 // pointed to by v, or returned as an error if an API error has occurred. If v implements the io.Writer interface,
 // the raw response will be written to v, without attempting to decode it.
 func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*http.Response, error) {
-
 	// rate limit
 	if c.limiter != nil {
 		if err := c.limiter.Wait(ctx); err != nil {
@@ -314,9 +327,7 @@ func (c *Client) Do(ctx context.Context, req *http.Request, v interface{}) (*htt
 		panic("Unmarshaler is nil")
 	}
 
-	if err = c.Unmarshaler(resp.Body, v, c.ContentType); err != nil {
-		return resp, err
-	}
+	err = c.Unmarshaler(resp.Body, v, c.ContentType)
 
 	return resp, err
 }
@@ -345,8 +356,10 @@ func unmarshal(r io.Reader, v interface{}, mediaType string) error {
 			}
 
 			*x = buf.String()
+
 			return nil
 		}
+
 		return errors.New("target type is not string")
 	default:
 		return errors.Wrap(ErrUnknownContentType, mediaType)
@@ -364,6 +377,7 @@ func UnmarshalYAML(r io.Reader, v interface{}, mediaType string) error {
 	if err != nil {
 		return err
 	}
+
 	return yaml.Unmarshal(data, v)
 }
 
@@ -378,5 +392,6 @@ func responseCallback(r *http.Response) (*http.Response, error) {
 	if c := r.StatusCode; c >= 200 && c <= 299 {
 		return r, nil
 	}
+
 	return r, errors.New(r.Status)
 }

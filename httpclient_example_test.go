@@ -24,13 +24,17 @@ func drainBody(b io.ReadCloser) (r1, r2 io.ReadCloser, err error) {
 		// No copying needed. Preserve the magic sentinel meaning of NoBody.
 		return http.NoBody, http.NoBody, nil
 	}
+
 	var buf bytes.Buffer
+
 	if _, err = buf.ReadFrom(b); err != nil {
 		return nil, b, err
 	}
-	if err = b.Close(); err != nil {
+
+	if err := b.Close(); err != nil {
 		return nil, b, err
 	}
+
 	return ioutil.NopCloser(&buf), ioutil.NopCloser(bytes.NewReader(buf.Bytes())), nil
 }
 
@@ -51,7 +55,6 @@ func ExampleRequestCallbackFunc() {
 	// Clients functionality is not affected by this, because the standard requestCallback function of
 	// the client just returns the unmodified request (r).
 	c.RequestCallback = func(r *http.Request) *http.Request {
-
 		// to convert the request in an appropriate curl command
 		// command, _ := http2curl.GetCurlCommand(r)
 
@@ -59,7 +62,11 @@ func ExampleRequestCallbackFunc() {
 		return r
 	}
 	req, _ := c.NewRequest(http.MethodGet, "/example", nil)
-	c.Do(context.Background(), req, nil)
+
+	resp, _ := c.Do(context.Background(), req, nil)
+	if resp != nil && resp.Body != nil {
+		_ = resp.Body.Close()
+	}
 	// Output:
 	// Accept: application/json
 	// Content-Type: application/json
@@ -77,7 +84,7 @@ func ExampleResponseCallbackFunc() {
 
 		// check post data
 		body, _ := ioutil.ReadAll(r.Body)
-		w.Write(body)
+		_, _ = w.Write(body)
 	}))
 	defer ts.Close()
 	c, _ := New(ts.URL)
@@ -99,17 +106,23 @@ func ExampleResponseCallbackFunc() {
 
 		// print and then restore the body
 		fmt.Fprintf(os.Stdout, "%s", body)
+
 		r.Body = save
 
-		// important to preserve standard clients behaviour
+		// important to preserve standard clients behaviur
 		if c := r.StatusCode; c >= 200 && c <= 299 {
 			return r, nil
 		}
+
 		return r, errors.New(r.Status)
 	}
 
 	req, _ := c.NewRequest(http.MethodPost, "/example", &message{Text: "example"})
-	c.Do(context.Background(), req, nil)
+
+	resp, _ := c.Do(context.Background(), req, nil)
+	if resp != nil && resp.Body != nil {
+		_ = resp.Body.Close()
+	}
 	// Output:
 	// {"Text":"example"}
 }

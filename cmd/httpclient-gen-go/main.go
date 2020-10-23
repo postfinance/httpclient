@@ -90,6 +90,7 @@ type service struct {
 	InterfaceName string
 }
 
+// nolint: gochecknoglobals
 var (
 	targetPackage string
 	sourcePath    string
@@ -99,6 +100,7 @@ var (
 	force         bool
 )
 
+// nolint: gochecknoinits
 func init() {
 	flag.StringVar(&targetPackage, "package", "main", "package name for the generated code")
 	flag.StringVar(&sourcePath, "path", ".", "path to scan for services")
@@ -108,6 +110,7 @@ func init() {
 	flag.BoolVar(&force, "force", false, "write file even it already exists")
 }
 
+// nolint: gocognit, gocyclo
 func main() {
 	flag.Parse()
 
@@ -118,11 +121,14 @@ func main() {
 
 	// get all services
 	fset := token.NewFileSet()
+
 	pkgs, err := parser.ParseDir(fset, sourcePath, nil, parser.AllErrors)
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	services := []service{}
+
 	for _, p := range pkgs {
 		for _, f := range p.Files {
 			for _, d := range f.Decls {
@@ -130,19 +136,23 @@ func main() {
 					if t.Tok != token.TYPE {
 						continue
 					}
+
 					for _, s := range t.Specs {
 						if ts, ok := s.(*ast.TypeSpec); ok {
 							if _, ok := ts.Type.(*ast.InterfaceType); ok {
 								if !strings.HasSuffix(ts.Name.String(), svcSuffix) {
 									continue
 								}
+
 								name := strings.TrimSuffix(ts.Name.String(), svcSuffix)
 								typeName := fmt.Sprintf("%s.%sImpl", p.Name, name)              // {name}Impl
 								interfaceName := fmt.Sprintf("%s.%s", p.Name, ts.Name.String()) // {name}Service
+
 								if p.Name == targetPackage {
 									typeName = fmt.Sprintf("%sImpl", name)
 									interfaceName = ts.Name.String()
 								}
+
 								services = append(services, service{
 									FieldName:     name,
 									VarName:       strings.ToLower(name),
@@ -164,12 +174,13 @@ func main() {
 
 	// render template
 	t := template.Must(template.New("Client Type Template").Parse(codeTemplate))
+
 	f, err := os.Create(outputFile)
 	if err != nil {
 		log.Fatal(errors.Wrapf(err, "could not create output file %s", outputFile))
 	}
-	defer f.Close()
-	t.Execute(f, struct {
+
+	_ = t.Execute(f, struct {
 		Timestamp time.Time
 		Path      string
 		Package   string
@@ -181,9 +192,13 @@ func main() {
 		Services:  services,
 	})
 
+	_ = f.Close()
+
 	// format code and fix imports
+	// nolint: gosec // G204: Subprocess launched with variable
 	if out, err := exec.Command(goImports, "-w", "-l", outputFile).CombinedOutput(); err != nil {
 		log.Fatal(errors.Wrap(err, string(out)))
 	}
+
 	fmt.Printf("%s generated\n", outputFile)
 }

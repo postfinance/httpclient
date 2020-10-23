@@ -32,6 +32,7 @@ func (m message) String() string {
 	return m.Text
 }
 
+// nolint: gochecknoglobals
 var (
 	baseurl        = "https://hostname.domain"
 	baseurlInvalid = "https://show you how deep the rabbit hole goes.domain"
@@ -43,6 +44,7 @@ var (
 	}
 )
 
+// nolint: funlen, gocognit, gocyclo
 func TestClient(t *testing.T) {
 	t.Run("query options", func(t *testing.T) {
 		opt := options{1, 10, "name=testHost"}
@@ -124,8 +126,8 @@ func TestClient(t *testing.T) {
 	})
 
 	t.Run("new client with headers and basic auth", func(t *testing.T) {
-		username := "user1"
-		password := "123456"
+		username := "user1"  // nolint: govet
+		password := "123456" // nolint: govet
 		fakeAuthHeader := http.Header{
 			"Authorization": []string{"fake"},
 		}
@@ -197,7 +199,6 @@ func TestClient(t *testing.T) {
 		}
 		_, _ = c.NewRequest(http.MethodGet, "node", nil)
 		assert.True(t, len(dump) > 0)
-		//t.Log(string(dump))
 	})
 
 	t.Run("new request using RequestCallback to dump request", func(t *testing.T) {
@@ -209,7 +210,6 @@ func TestClient(t *testing.T) {
 		}
 		_, _ = c.NewRequest(http.MethodGet, "node", nil)
 		assert.True(t, len(command.String()) > 0)
-		//t.Log(string(command.String()))
 	})
 
 	t.Run("new request without basic auth", func(t *testing.T) {
@@ -327,7 +327,10 @@ func TestClient(t *testing.T) {
 		req, err := c.NewRequest(http.MethodGet, "node", act)
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
-		_, _ = c.Do(ctx, req, act)
+		resp, _ := c.Do(ctx, req, act)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.Fail(t, "Do did not panic")
 	})
 
@@ -342,7 +345,10 @@ func TestClient(t *testing.T) {
 		req, err := c.NewRequest(http.MethodGet, "node", act)
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
-		_, _ = c.Do(ctx, req, act)
+		resp, _ := c.Do(ctx, req, act)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.Fail(t, "Do did not panic")
 	})
 
@@ -354,7 +360,10 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		var buf bytes.Buffer
-		_, err = c.Do(ctx, req, bufio.NewWriter(&buf))
+		resp, err := c.Do(ctx, req, bufio.NewWriter(&buf))
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.Nil(t, err)
 		assert.True(t, buf.Len() > 0)
 	})
@@ -366,7 +375,10 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		act := &message{}
-		_, err = c.Do(ctx, req, act)
+		resp, err := c.Do(ctx, req, act)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.Nil(t, err)
 		assert.Equal(t, &testMessage, act)
 	})
@@ -379,7 +391,10 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		act := &message{}
-		_, err = c.Do(ctx, req, act)
+		resp, err := c.Do(ctx, req, act)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.Nil(t, err)
 		assert.Equal(t, &testMessage, act)
 	})
@@ -392,7 +407,10 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		act := ""
-		_, err = c.Do(ctx, req, &act)
+		resp, err := c.Do(ctx, req, &act)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.Nil(t, err)
 		assert.Equal(t, testMessage.String(), act)
 	})
@@ -405,7 +423,10 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		act := 42
-		_, err = c.Do(ctx, req, &act)
+		resp, err := c.Do(ctx, req, &act)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.NotNil(t, err)
 	})
 
@@ -417,7 +438,10 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		var buf bytes.Buffer
-		_, err = c.Do(ctx, req, bufio.NewWriter(&buf))
+		resp, err := c.Do(ctx, req, bufio.NewWriter(&buf))
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.NotNil(t, err)
 		assert.Equal(t, "404 Not Found", err.Error())
 	})
@@ -435,13 +459,15 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		var buf bytes.Buffer
-		_, err = c.Do(ctx, req, bufio.NewWriter(&buf))
+		resp, err := c.Do(ctx, req, bufio.NewWriter(&buf))
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.Nil(t, err)
 		assert.True(t, len(dump) > 0)
-		//t.Log(string(dump))
 	})
 
-	t.Run("do a request with content type unknown/unknown in response to test unmarshal behaviour", func(t *testing.T) {
+	t.Run("do a request with content type unknown/unknown in response to test unmarshal behavior", func(t *testing.T) {
 		c, _ := New(ts.URL)
 		c.ContentType = ContentTypeText
 		c.ResponseCallback = func(r *http.Response) (*http.Response, error) {
@@ -453,7 +479,10 @@ func TestClient(t *testing.T) {
 		assert.Nil(t, err)
 		assert.NotNil(t, req)
 		act := 42
-		_, err = c.Do(ctx, req, &act)
+		resp, err := c.Do(ctx, req, &act)
+		if resp != nil && resp.Body != nil {
+			_ = resp.Body.Close()
+		}
 		assert.NotNil(t, err)
 	})
 }
