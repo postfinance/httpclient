@@ -239,7 +239,7 @@ func (c *Client) NewRequest(method, urlStr string, body interface{}) (*http.Requ
 	}
 
 	if c.header != nil {
-		req.Header = c.header
+		req.Header = c.header.Clone()
 	}
 
 	if len(c.username) > 0 && len(c.password) > 0 {
